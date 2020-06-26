@@ -22,7 +22,7 @@ flag{w3lc0me_t0_r3dpwnctf_d1sc0rd}
 https://redpwn.net/  
 
 For this one, you view the page source and then you can find the flag at the top  
-```
+```html
 <meta name="redpwnctf2020" content="flag{1nspector_g3n3ral_at_w0rk}">
 ```
 
@@ -86,3 +86,39 @@ From_Base64('A-Za-z0-9+/=',true)
 And low and behold, the flag!
 
 flag{l00ks_l1ke_a_l0t_of_64s}
+
+## web/login
+
+> I made a cool login page. I bet you can't get in!
+
+Site: https://login.2020.redpwnc.tf/
+
+After examining the Javascript code, I identified this to be the most interesting part of the code.
+```js
+let result;
+    try {
+        result = db.prepare(`SELECT * FROM users 
+            WHERE username = '${username}'
+            AND password = '${password}';`).get();
+    } catch (error) {
+        res.json({ success: false, error: "There was a problem." });
+        res.end();
+        return;
+    }
+    
+    if (result) {
+        res.json({ success: true, flag: process.env.FLAG });
+        res.end();
+        return;
+    }
+```
+I noticed, that to get the flag, result needs to be set to a value. The only parts that we can input data is `'${username}'` and `'${password}'`.  
+I noticed that Javascript is preparing an SQL query to a database. Could this be SQL injection? Let's give it a try!  
+By guessing, I entered `admin` in the username field.  
+But I didn't know the password so here I tried SQL injection. In the password field I entered `' OR '1' = '1` which even though the password is wrong the 1 = 1 is true and so a value is set for result. In case you're still confused, the SQL query looks like this with our input.  
+```sql
+SELECT * FROM users WHERE username = 'admin' AND password = '' OR '1' = '1';
+```
+
+And so here's the flag!  
+flag{0bl1g4t0ry_5ql1}  
